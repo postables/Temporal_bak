@@ -94,7 +94,7 @@ ignored = ["github.com/ipfs/go-ipfs/repo/config", "github.com/karalabe/hid", "gi
 
 [[constraint]]
   name = "github.com/ethereum/go-ethereum"
-  version = "1.8.11"
+  branch = "master"
 
 [[constraint]]
   branch = "master"

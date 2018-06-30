@@ -2,6 +2,7 @@ package rtswarm
 
 import (
 	"crypto/ecdsa"
+	"os"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/swarm/api"
@@ -26,9 +27,21 @@ func NewSwarmManager() (*SwarmManager, error) {
 	return sm, nil
 }
 
+func (sm *SwarmManager) UploadRaw(file *os.File, manifest string, encrypt bool) (string, error) {
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return "", err
+	}
+	resp, err := sm.Client.UploadRaw(file, fileInfo.Size(), encrypt)
+	if err != nil {
+		return "", err
+	}
+	return resp, nil
+}
+
 // GenSwarmAPIConfig is used to generate a default swarm api configuration
 func (sm *SwarmManager) GenSwarmAPIConfig() {
-	sm.Config = api.NewDefaultConfig()
+	sm.Config = api.NewConfig()
 }
 
 // GenSwarmPrivateKeys is used to generate our swarm private keys

@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/RTradeLtd/go-ipfs-api"
   packages = ["."]
-  revision = "1c2767ea525149c0d4a81d90a805bf19e8fd84ea"
+  revision = "980c8a51a6a78da90e1cc4b78c5a9c2cdbdf8588"
 
 [[projects]]
   branch = "master"
@@ -27,7 +27,7 @@
   branch = "master"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
-  revision = "06cfa1db77dae2425e143980408e642f7a9d5b09"
+  revision = "2c5933638c5ef1bc320b01486100788c81d57b99"
 
 [[projects]]
   branch = "master"
@@ -40,12 +40,6 @@
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/bmizerany/pat"
-  packages = ["."]
-  revision = "6226ea591a40176dd3ff9cd8eff81ed6ca721a00"
 
 [[projects]]
   branch = "master"
@@ -90,6 +84,7 @@
   revision = "0bce6a6887123b67a60366d2c9fe2dfb74289d2e"
 
 [[projects]]
+  branch = "master"
   name = "github.com/ethereum/go-ethereum"
   packages = [
     ".",
@@ -100,7 +95,6 @@
     "accounts/keystore",
     "accounts/usbwallet",
     "accounts/usbwallet/internal/trezor",
-    "bmt",
     "common",
     "common/bitutil",
     "common/hexutil",
@@ -142,20 +136,29 @@
     "p2p/discv5",
     "p2p/nat",
     "p2p/netutil",
+    "p2p/protocols",
     "params",
     "rlp",
     "rpc",
     "swarm/api",
     "swarm/api/client",
+    "swarm/bmt",
+    "swarm/log",
+    "swarm/multihash",
     "swarm/network",
-    "swarm/network/kademlia",
+    "swarm/pot",
+    "swarm/pss",
     "swarm/services/swap",
     "swarm/services/swap/swap",
+    "swarm/state",
     "swarm/storage",
-    "trie"
+    "swarm/storage/encryption",
+    "swarm/storage/mock",
+    "swarm/storage/mru",
+    "trie",
+    "whisper/whisperv5"
   ]
-  revision = "dea1ce052a10cd7d401a5c04f83f371a06fe293c"
-  version = "v1.8.11"
+  revision = "fdfd6d3c3963b1b3459e4625458495458b11e8a7"
 
 [[projects]]
   name = "github.com/fd/go-nat"
@@ -247,6 +250,18 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/gotk3/gotk3"
+  packages = [
+    "cairo",
+    "gdk",
+    "glib",
+    "gtk",
+    "pango"
+  ]
+  revision = "80205b7ba46b599a304c62e17b6d155bda664ccc"
+
+[[projects]]
+  branch = "master"
   name = "github.com/gxed/GoEndian"
   packages = ["."]
   revision = "0f5c6873267e5abf306ffcdfcfa4bf77517ef4a7"
@@ -276,13 +291,13 @@
   branch = "master"
   name = "github.com/hsanjuan/go-libp2p-gostream"
   packages = ["."]
-  revision = "fb4df4b77cebd7c5fd04f847e6985b647a937560"
+  revision = "9f078322a4bfdcec95127197af3a5db25c336ea5"
 
 [[projects]]
   branch = "master"
   name = "github.com/hsanjuan/go-libp2p-http"
   packages = ["."]
-  revision = "25a66b71e7fe040d934f16416191e625b8069c53"
+  revision = "e62d8ebefe04b3d048d96c148c151c3684b26a9c"
 
 [[projects]]
   branch = "master"
@@ -313,8 +328,8 @@
 [[projects]]
   name = "github.com/ipfs/go-ipfs-addr"
   packages = ["."]
-  revision = "25333b7bd949a92d00acb4e98f28dfe4999a0e9b"
-  version = "v0.1.13"
+  revision = "66cee4edee7a88f44f771c168f89c39c4489492c"
+  version = "v0.1.15"
 
 [[projects]]
   name = "github.com/ipfs/go-ipfs-api"
@@ -347,7 +362,7 @@
     ".",
     "pb"
   ]
-  revision = "43cc7ad5fd98883976c8a50f00d23a849b825cb5"
+  revision = "d157022b509ddca606cc1cfaec66b282604910fa"
 
 [[projects]]
   name = "github.com/ipfs/go-log"
@@ -432,8 +447,8 @@
 [[projects]]
   name = "github.com/libp2p/go-addr-util"
   packages = ["."]
-  revision = "3a008c3cc5082119a398b26035e6ac44a74d93f6"
-  version = "v2.0.2"
+  revision = "1c62fe93a4d85d6357ac65db3d08d22d011018a7"
+  version = "v2.0.3"
 
 [[projects]]
   name = "github.com/libp2p/go-conn-security"
@@ -441,14 +456,14 @@
     ".",
     "insecure"
   ]
-  revision = "4e9b511f4f9a6aeef5659909fe9ddf9ee34ab6b2"
-  version = "v0.1.3"
+  revision = "c2f2dd888803f4a703054084eb8d946d2281b7c4"
+  version = "v0.1.4"
 
 [[projects]]
   branch = "master"
   name = "github.com/libp2p/go-conn-security-multistream"
   packages = ["."]
-  revision = "88cc698d9588c5d70840938dd523310b0ee8bf20"
+  revision = "df26ef91ad66a626a4b7147fd95d18962395a20e"
 
 [[projects]]
   name = "github.com/libp2p/go-flow-metrics"
@@ -465,8 +480,8 @@
     "p2p/protocol/identify",
     "p2p/protocol/identify/pb"
   ]
-  revision = "a08d9e63dbf006c905a532d5f645a2bf6fae3bd1"
-  version = "v6.0.2"
+  revision = "f24a6d86d87905f56c94de49cdafbfe1ebb83c7e"
+  version = "v6.0.4"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-circuit"
@@ -474,8 +489,8 @@
     ".",
     "pb"
   ]
-  revision = "7054cca8a16d8324be6be1410285aa4c4c9e40de"
-  version = "v2.1.2"
+  revision = "dc62c804d879c9e706365f003a8143385bd34609"
+  version = "v2.1.4"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-crypto"
@@ -489,14 +504,14 @@
 [[projects]]
   name = "github.com/libp2p/go-libp2p-host"
   packages = ["."]
-  revision = "492c6c2bd43e15964cd2d7bdcb9678a156438088"
-  version = "v3.0.2"
+  revision = "726ec3240b7f9f3863f8c1cf16a311b8a2809321"
+  version = "v3.0.3"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-interface-connmgr"
   packages = ["."]
-  revision = "c76a82a2723df14c24d38c99f21406c8de2d64d3"
-  version = "v0.0.9"
+  revision = "073ebd06efc4cf6eb29b848686acf3e3bf4523e1"
+  version = "v0.0.10"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-interface-pnet"
@@ -507,8 +522,8 @@
 [[projects]]
   name = "github.com/libp2p/go-libp2p-loggables"
   packages = ["."]
-  revision = "6ce2bbea380b481b0663c51b8969e0472590a5a3"
-  version = "v1.1.16"
+  revision = "face65f3d61355a5eb23ae2d470248fcf8739441"
+  version = "v1.1.17"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-metrics"
@@ -519,14 +534,14 @@
 [[projects]]
   name = "github.com/libp2p/go-libp2p-nat"
   packages = ["."]
-  revision = "866e8f0397fb46125a4e08ee07945407c9c9a6ee"
-  version = "v0.8.2"
+  revision = "23f316f5e97e16e8926c66a848cbb06ca984760d"
+  version = "v0.8.3"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-net"
   packages = ["."]
-  revision = "a2b01710790f0781c42bf573b8487f2ef69b5895"
-  version = "v3.0.2"
+  revision = "5833724d4c3273cba339482989a318396775b912"
+  version = "v3.0.4"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-peer"
@@ -540,8 +555,8 @@
     ".",
     "addr"
   ]
-  revision = "8363aa9ac6cb93e6164037198b2b6a8239c7d4fe"
-  version = "v1.4.20"
+  revision = "ccd2a0abe391ea27dac60308485adaa93a514cae"
+  version = "v1.4.21"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-pnet"
@@ -576,26 +591,26 @@
     ".",
     "pb"
   ]
-  revision = "eb43d20a249fc44fa00daffb0f6f23b9911359e2"
-  version = "v2.0.2"
+  revision = "e4910f5adf3debfcd76f64efea6d1e3dd96756d4"
+  version = "v2.0.3"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-swarm"
   packages = ["."]
-  revision = "c1461238dbdc214fa10618f87d8a8e92a445e7c9"
-  version = "v3.0.2"
+  revision = "f13bb386643a7e3a3777cf912ffa937eb97ac786"
+  version = "v3.0.4"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-transport"
   packages = ["."]
-  revision = "5ea881b9fd363ad7fbf6ef7916855dae7d189b5d"
-  version = "v3.0.2"
+  revision = "3a76e545b272018a49ffece9e16b2c7bbb2ca55f"
+  version = "v3.0.4"
 
 [[projects]]
   name = "github.com/libp2p/go-libp2p-transport-upgrader"
   packages = ["."]
-  revision = "9a9b918a26034e4cdf222ffe6e2f27f0b48da6f0"
-  version = "v0.1.2"
+  revision = "2616b5b8f5d02551b4f3f884e0b9b1a86aa05cf7"
+  version = "v0.1.3"
 
 [[projects]]
   name = "github.com/libp2p/go-maddr-filter"
@@ -625,8 +640,8 @@
 [[projects]]
   name = "github.com/libp2p/go-reuseport-transport"
   packages = ["."]
-  revision = "43cb6ab3d2a1cfd6418ba2c7722d5d47dbbd5d18"
-  version = "v0.1.6"
+  revision = "062d864ee432aa5158f91a4d13e75d319b062095"
+  version = "v0.1.7"
 
 [[projects]]
   name = "github.com/libp2p/go-sockaddr"
@@ -643,14 +658,14 @@
 [[projects]]
   name = "github.com/libp2p/go-tcp-transport"
   packages = ["."]
-  revision = "3d170b87862863e5fb40ccfc87eeac46b309149f"
-  version = "v2.0.2"
+  revision = "b3201c58dfe88671fd1e93311776326337a21608"
+  version = "v2.0.3"
 
 [[projects]]
   name = "github.com/libp2p/go-ws-transport"
   packages = ["."]
-  revision = "ae783a7cc28d46e71e958409b31641929d727799"
-  version = "v2.0.2"
+  revision = "cfc76e292a6c80902669ff97a683c85562bed43a"
+  version = "v2.0.3"
 
 [[projects]]
   name = "github.com/lucasb-eyer/go-colorful"
@@ -736,8 +751,8 @@
 [[projects]]
   name = "github.com/multiformats/go-multiaddr-net"
   packages = ["."]
-  revision = "8792ba0a888d6a2415cfa765e4d06d897eaeb19a"
-  version = "v1.6.1"
+  revision = "4d4b901d1729f55ee20cc0c8d8021aa58eb5ebe3"
+  version = "v1.6.2"
 
 [[projects]]
   name = "github.com/multiformats/go-multibase"
@@ -835,7 +850,7 @@
     "nfs",
     "xfs"
   ]
-  revision = "7d6f385de8bea29190f15ba9931442a0eaef9af7"
+  revision = "40f013a808ec4fa79def444a1a56de4d1727efcb"
 
 [[projects]]
   name = "github.com/prometheus/prometheus"
@@ -853,13 +868,13 @@
   branch = "master"
   name = "github.com/rivo/tview"
   packages = ["."]
-  revision = "306abd9cb98c97417ab6c58aa0400b2e5daac88b"
+  revision = "83483397e826c343edb7b8c1f33fb7983dda9fc5"
 
 [[projects]]
-  branch = "master"
   name = "github.com/rjeczalik/notify"
   packages = ["."]
-  revision = "d152f3ce359a5464dc41e84a8919fc67e55bbbf0"
+  revision = "52ae50d8490436622a8941bd70c3dbe0acdd4bbf"
+  version = "v0.9.0"
 
 [[projects]]
   name = "github.com/rs/cors"
@@ -923,16 +938,6 @@
   revision = "0d5a0ceb10cf9ab89fdd744cc8c50a83134f6697"
 
 [[projects]]
-  name = "github.com/tus/tusd"
-  packages = [
-    ".",
-    "filestore",
-    "uid"
-  ]
-  revision = "966f1d51639d3405b630e4c94c0b1d76a0f7475c"
-  version = "0.10.0"
-
-[[projects]]
   name = "github.com/ugorji/go"
   packages = ["codec"]
   revision = "b4c50a2b199d93b13dc15e78929cfb23bfdf21ab"
@@ -975,10 +980,10 @@
   revision = "097c5d47330ff6a823f67e3515faa13566a62c6f"
 
 [[projects]]
-  branch = "master"
   name = "github.com/whyrusleeping/go-smux-multiplex"
   packages = ["."]
   revision = "6c9914bb78b80e4e5947a43d27781b8863e19062"
+  version = "v3.0.10"
 
 [[projects]]
   branch = "master"
@@ -996,7 +1001,7 @@
   branch = "master"
   name = "github.com/whyrusleeping/mafmt"
   packages = ["."]
-  revision = "794419fbc8492a4d5b7ba38b58c2bb47d9e37eaa"
+  revision = "1dc32401ee9fdd3f6cdb3405ec984d5dae877b2a"
 
 [[projects]]
   branch = "master"
@@ -1048,9 +1053,16 @@
     "html",
     "html/atom",
     "html/charset",
+    "idna",
     "websocket"
   ]
-  revision = "afe8f62b1d6bbd81f31868121a50b06d8188e1f9"
+  revision = "4cb1c02c05b0e749b0365f61ae859a8e0cfceed9"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sync"
+  packages = ["syncmap"]
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
 [[projects]]
   branch = "master"
@@ -1060,11 +1072,13 @@
     "unix",
     "windows"
   ]
-  revision = "63fc586f45fe72d95d5240a5d5eb95e6503907d3"
+  revision = "7138fd3d9dc8335c567ca206f4333fb75eb05d56"
 
 [[projects]]
   name = "golang.org/x/text"
   packages = [
+    "collate",
+    "collate/build",
     "encoding",
     "encoding/charmap",
     "encoding/htmlindex",
@@ -1075,13 +1089,20 @@
     "encoding/simplifiedchinese",
     "encoding/traditionalchinese",
     "encoding/unicode",
+    "internal/colltab",
     "internal/gen",
     "internal/tag",
+    "internal/triegen",
+    "internal/ucd",
     "internal/utf8internal",
     "language",
     "runes",
+    "secure/bidirule",
     "transform",
-    "unicode/cldr"
+    "unicode/bidi",
+    "unicode/cldr",
+    "unicode/norm",
+    "unicode/rangetable"
   ]
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
@@ -1094,13 +1115,7 @@
     "imports",
     "internal/fastwalk"
   ]
-  revision = "25b95b48224cce18163c7d49dcfb89a2d5ecd209"
-
-[[projects]]
-  name = "gopkg.in/Acconut/lockfile.v1"
-  packages = ["."]
-  revision = "ea910fd69bd541bb592c5729c94f595c696413ab"
-  version = "v1.1.0"
+  revision = "1c99e1239a0c8b0e59c34000995c4e319b7702ca"
 
 [[projects]]
   name = "gopkg.in/dgrijalva/jwt-go.v3"
@@ -1147,6 +1162,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7bd033515704d96bdaff5c42d6b63afcd112083a7308e5f4480ef934c434c79a"
+  inputs-digest = "7f4634915c94b29f76a12561e02b7116d400678f2d0ec8ec1f86939c7b495034"
   solver-name = "gps-cdcl"
   solver-version = 1
