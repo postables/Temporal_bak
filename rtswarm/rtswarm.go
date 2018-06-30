@@ -2,6 +2,7 @@ package rtswarm
 
 import (
 	"crypto/ecdsa"
+	"errors"
 	"os"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -27,12 +28,36 @@ func NewSwarmManager() (*SwarmManager, error) {
 	return sm, nil
 }
 
+func (sm *SwarmManager) DownloadManifest(hash string) (*api.Manifest, bool, error) {
+	if hash == "" {
+		return nil, false, errors.New("hash is empty")
+	}
+
+	manifest, isEncrypted, err := sm.DownloadManifest(hash)
+	if err != nil {
+		return nil, false, err
+	}
+	return manifest, isEncrypted, nil
+}
+
 func (sm *SwarmManager) UploadRaw(file *os.File, manifest string, encrypt bool) (string, error) {
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return "", err
 	}
 	resp, err := sm.Client.UploadRaw(file, fileInfo.Size(), encrypt)
+	if err != nil {
+		return "", err
+	}
+	return resp, nil
+}
+
+func (sm *SwarmManager) Upload(filePath, manifest string, encrypt bool) (string, error) {
+	f, err := client.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	resp, err := sm.Client.Upload(f, manifest, encrypt)
 	if err != nil {
 		return "", err
 	}
