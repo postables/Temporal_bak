@@ -52,3 +52,8 @@ curl -F 'dir3/file.txt=some-other-data;type=text/plain' http://localhost:8500/bz
 ## Listing Files
 
 curl -s http://localhost:8500/bzz-list:/ccef599d1a13bed9989e424011aed2c023fce25917864cd7de38a761567410b8/ | jq .
+
+
+# Notes
+
+When uploading to swarm, a manifest is generated (http://swarm-guide.readthedocs.io/en/latest/usage/manifests.html#swarm-manifest)
