@@ -8,18 +8,6 @@ import (
 	"github.com/RTradeLtd/Temporal/rtswarm"
 )
 
-func TestRTSwarmUpload(t *testing.T) {
-	sm, err := rtswarm.NewSwarmManager()
-	if err != nil {
-		t.Fatal(err)
-	}
-	resp, err := sm.Upload("/tmp/test_file", "", true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println(resp)
-}
-
 func TestRTSwarmRaw(t *testing.T) {
 	fmt.Println(1)
 	sm, err := rtswarm.NewSwarmManager()
