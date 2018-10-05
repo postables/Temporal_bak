@@ -1,26 +1,22 @@
 package database_test
 
 import (
-	"fmt"
+	"os"
 	"testing"
 
 	"github.com/RTradeLtd/Temporal/database"
+	"github.com/RTradeLtd/config"
 	"github.com/jinzhu/gorm"
 )
 
-const travis = true
-
-var dbPass string
+var (
+	travis = os.Getenv("TRAVIS") != ""
+	dbPass string
+)
 
 func TestDatabase(t *testing.T) {
-	if !travis {
-		dbPass = "password123"
-	} else {
-		dbPass = ""
-	}
-	dbConnURL := fmt.Sprintf("host=127.0.0.1 port=5432 user=postgres dbname=temporal password=%s sslmode=disable", dbPass)
-
-	db, err := gorm.Open("postgres", dbConnURL)
+	db, err := gorm.Open(
+		"postgres", "host=127.0.0.1 port=5433 user=postgres dbname=temporal password=password123 sslmode=disable")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,14 +24,36 @@ func TestDatabase(t *testing.T) {
 }
 
 func TestDatabaseMigrations(t *testing.T) {
-	if !travis {
-		dbPass = "password123"
-	} else {
-		dbPass = ""
+	db, err := database.OpenDBConnection(database.DBOptions{
+		User:           "postgres",
+		Password:       "password123",
+		Address:        "127.0.0.1",
+		Port:           "5433",
+		SSLModeDisable: true,
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
-	db := database.OpenDBConnection(dbPass)
 	db.AutoMigrate(database.UploadObj)
 	db.AutoMigrate(database.UserObj)
 	db.AutoMigrate(database.PaymentObj)
+	db.Close()
+}
+
+func TestDatabaseInitialize_withMigrations(t *testing.T) {
+	db, err := database.Initialize(&config.TemporalConfig{
+		Database: config.Database{
+			Name:     "temporal",
+			URL:      "127.0.0.1",
+			Port:     "5433",
+			Username: "postgres",
+			Password: "password123",
+		},
+	}, database.DatabaseOptions{
+		RunMigrations:  true,
+		SSLModeDisable: true})
+	if err != nil {
+		t.Fatal(err)
+	}
 	db.Close()
 }

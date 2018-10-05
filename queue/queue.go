@@ -4,91 +4,39 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
+	"os"
 
-	"github.com/RTradeLtd/Temporal/config"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/RTradeLtd/Temporal/database"
+	"github.com/RTradeLtd/config"
 	"github.com/streadway/amqp"
 )
 
-var DatabaseFileAddQueue = "dfa-queue"
-var IpfsPinQueue = "ipfs-pin-queue"
-var IpfsFileQueue = "ipfs-file-queue"
-var IpfsClusterPinQueue = "ipfs-cluster-add-queue"
-var PinPaymentConfirmationQueue = "pin-payment-confirmation-queue"
-var PinPaymentSubmissionQueue = "pin-payment-submission-queue"
-var EmailSendQueue = "email-send-queue"
-var IpnsEntryQueue = "ipns-entry-queue"
-var IpfsPinRemovalQueue = "ipns-pin-removal-queue"
-var IpfsKeyCreationQueue = "ipfs-key-creation-queue"
-
-var AdminEmail = "temporal.reports@rtradetechnologies.com"
-
-// QueueManager is a helper struct to interact with rabbitmq
-type QueueManager struct {
-	Connection *amqp.Connection
-	Channel    *amqp.Channel
-	Queue      *amqp.Queue
+func (qm *QueueManager) setupLogging() error {
+	logFileName := fmt.Sprintf("/var/log/temporal/%s_serice.log", qm.QueueName)
+	logFile, err := os.OpenFile(logFileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0640)
+	if err != nil {
+		return err
+	}
+	logger := log.New()
+	logger.Out = logFile
+	qm.Logger = logger
+	qm.Logger.Info("Logging initialized")
+	return nil
 }
 
-// IPFSKeyCreation is a message used for processing key creation
-// only supported for the public IPFS network at the moment
-type IPFSKeyCreation struct {
-	UserName string `json:"user_name"`
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Size     int    `json:"size"`
-}
-
-// IPFSPin is a struct used when sending pin request
-type IPFSPin struct {
-	CID              string `json:"cid"`
-	NetworkName      string `json:"network_name"`
-	UserName         string `json:"user_name"`
-	HoldTimeInMonths int64  `json:"hold_time_in_months"`
-}
-
-type IPFSFile struct {
-	BucketName       string `json:"bucket_name"`
-	ObjectName       string `json:"object_name"`
-	UserName         string `json:"user_name"`
-	NetworkName      string `json:"network_name"`
-	HoldTimeInMonths string `json:"hold_time_in_months"`
-}
-
-// IPFSClusterPin is a queue message used when sending a message to the cluster to pin content
-type IPFSClusterPin struct {
-	CID         string `json:"cid"`
-	NetworkName string `json:"network_name,omitempty"`
-}
-
-type IPFSPinRemoval struct {
-	ContentHash string `json:"content_hash"`
-	NetworkName string `json:"network_name"`
-	UserName    string `json:"user_name"`
-}
-
-// DatabaseFileAdd is a struct used when sending data to rabbitmq
-type DatabaseFileAdd struct {
-	Hash             string `json:"hash"`
-	HoldTimeInMonths int64  `json:"hold_time_in_months"`
-	UserName         string `json:"user_name"`
-	NetworkName      string `json:"network_name"`
-}
-
-type IPNSUpdate struct {
-	CID         string `json:"content_hash"`
-	IPNSHash    string `json:"ipns_hash"`
-	LifeTime    string `json:"life_time"`
-	TTL         string `json:"ttl"`
-	Key         string `json:"key"`
-	Resolve     bool   `json:"resolve"`
-	UserName    string `json:"user_name"`
-	NetworkName string `json:"network_name"`
+func (qm *QueueManager) parseQueueName(queueName string) error {
+	host, err := os.Hostname()
+	if err != nil {
+		return err
+	}
+	qm.QueueName = fmt.Sprintf("%s+%s", host, queueName)
+	return nil
 }
 
 // Initialize is used to connect to the given queue, for publishing or consuming purposes
-func Initialize(queueName, connectionURL string, publish bool) (*QueueManager, error) {
+func Initialize(queueName, connectionURL string, publish, service bool) (*QueueManager, error) {
 	conn, err := setupConnection(connectionURL)
 	if err != nil {
 		return nil, err
@@ -97,34 +45,46 @@ func Initialize(queueName, connectionURL string, publish bool) (*QueueManager, e
 	if err := qm.OpenChannel(); err != nil {
 		return nil, err
 	}
-	// Declare Non Default exchanges for the particular queue
-	switch queueName {
-	case IpfsPinRemovalQueue:
-		err = qm.DeclareIPFSPinRemovalExchange()
+
+	qm.QueueName = queueName
+	qm.Service = queueName
+
+	if service {
+		err = qm.setupLogging()
 		if err != nil {
 			return nil, err
 		}
-		if publish {
-			return &qm, nil
-		}
+	}
+	// Declare Non Default exchanges for the particular queue
+	switch queueName {
 	case IpfsPinQueue:
+		err = qm.parseQueueName(queueName)
+		if err != nil {
+			return nil, err
+		}
 		err = qm.DeclareIPFSPinExchange()
 		if err != nil {
 			return nil, err
 		}
+		qm.ExchangeName = PinExchange
 		if publish {
 			return &qm, nil
 		}
 	case IpfsKeyCreationQueue:
+		err = qm.parseQueueName(queueName)
+		if err != nil {
+			return nil, err
+		}
 		err = qm.DeclareIPFSKeyExchange()
 		if err != nil {
 			return nil, err
 		}
+		qm.ExchangeName = IpfsKeyExchange
 		if publish {
 			return &qm, nil
 		}
 	}
-	if err := qm.DeclareQueue(queueName); err != nil {
+	if err := qm.DeclareQueue(); err != nil {
 		return nil, err
 	}
 	return &qm, nil
@@ -143,24 +103,34 @@ func (qm *QueueManager) OpenChannel() error {
 	if err != nil {
 		return err
 	}
+	if qm.Logger != nil {
+		qm.Logger.WithFields(log.Fields{
+			"service": qm.QueueName,
+		}).Info("channel opened")
+	}
 	qm.Channel = ch
 	return nil
 }
 
 // DeclareQueue is used to declare a queue for which messages will be sent to
-func (qm *QueueManager) DeclareQueue(queueName string) error {
+func (qm *QueueManager) DeclareQueue() error {
 	// we declare the queue as durable so that even if rabbitmq server stops
 	// our messages won't be lost
 	q, err := qm.Channel.QueueDeclare(
-		queueName, // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
+		qm.QueueName, // name
+		true,         // durable
+		false,        // delete when unused
+		false,        // exclusive
+		false,        // no-wait
+		nil,          // arguments
 	)
 	if err != nil {
 		return err
+	}
+	if qm.Logger != nil {
+		qm.Logger.WithFields(log.Fields{
+			"service": qm.QueueName,
+		}).Info("queue declared")
 	}
 	qm.Queue = &q
 	return nil
@@ -169,17 +139,22 @@ func (qm *QueueManager) DeclareQueue(queueName string) error {
 // ConsumeMessage is used to consume messages that are sent to the queue
 // Question, do we really want to ack messages that fail to be processed?
 // Perhaps the error was temporary, and we allow it to be retried?
-func (qm *QueueManager) ConsumeMessage(consumer, dbPass, dbURL, ethKeyFile, ethKeyPass, dbUser string, cfg *config.TemporalConfig) error {
-	db, err := database.OpenDBConnection(dbPass, dbURL, dbUser)
+func (qm *QueueManager) ConsumeMessage(consumer, dbPass, dbURL, dbUser string, cfg *config.TemporalConfig) error {
+	db, err := database.OpenDBConnection(database.DBOptions{
+		User:           cfg.Database.Username,
+		Password:       cfg.Database.Password,
+		Address:        cfg.Database.URL,
+		Port:           cfg.Database.Port,
+		SSLModeDisable: false,
+	})
 	if err != nil {
 		return err
 	}
-
 	// ifs the queue is using an exchange, we will need to bind the queue to the exchange
-	switch qm.Queue.Name {
-	case IpfsPinRemovalQueue:
+	switch qm.ExchangeName {
+	case PinRemovalExchange:
 		err = qm.Channel.QueueBind(
-			qm.Queue.Name,      // name of the queue
+			qm.QueueName,       // name of the queue
 			"",                 // routing key
 			PinRemovalExchange, // exchange
 			false,              // noWait
@@ -188,20 +163,26 @@ func (qm *QueueManager) ConsumeMessage(consumer, dbPass, dbURL, ethKeyFile, ethK
 		if err != nil {
 			return err
 		}
-	case IpfsPinQueue:
+		qm.Logger.WithFields(log.Fields{
+			"service": qm.QueueName,
+		}).Info("queue bound")
+	case PinExchange:
 		err = qm.Channel.QueueBind(
-			qm.Queue.Name, // name of the queue
-			"",            // routing key
-			PinExchange,   // exchange
-			false,         // noWait
-			nil,           // arguments
+			qm.QueueName, // name of the queue
+			"",           // routing key
+			PinExchange,  // exchange
+			false,        // noWait
+			nil,          // arguments
 		)
 		if err != nil {
 			return err
 		}
-	case IpfsKeyCreationQueue:
+		qm.Logger.WithFields(log.Fields{
+			"service": qm.QueueName,
+		}).Info("queue bound")
+	case IpfsKeyExchange:
 		err = qm.Channel.QueueBind(
-			qm.Queue.Name,   // name of the queue
+			qm.QueueName,    // name of the queue
 			"",              // routing key
 			IpfsKeyExchange, // exchange
 			false,           // no wait
@@ -210,76 +191,59 @@ func (qm *QueueManager) ConsumeMessage(consumer, dbPass, dbURL, ethKeyFile, ethK
 		if err != nil {
 			return err
 		}
+		qm.Logger.WithFields(log.Fields{
+			"service": qm.QueueName,
+		}).Info("queue bound")
 	default:
 		break
 	}
 
 	// consider moving to true for auto-ack
 	msgs, err := qm.Channel.Consume(
-		qm.Queue.Name, // queue
-		consumer,      // consumer
-		false,         // auto-ack
-		false,         // exclusive
-		false,         // no-local
-		false,         // no-wait
-		nil,           // args
+		qm.QueueName, // queue
+		consumer,     // consumer
+		false,        // auto-ack
+		false,        // exclusive
+		false,        // no-local
+		false,        // no-wait
+		nil,          // args
 	)
 	if err != nil {
 		return err
 	}
 
 	// check the queue name
-	switch qm.Queue.Name {
+	switch qm.Service {
 	// only parse datbase file requests
 	case DatabaseFileAddQueue:
-		ProcessDatabaseFileAdds(msgs, db)
+		qm.ProcessDatabaseFileAdds(msgs, db)
 	case IpfsPinQueue:
-		err = ProccessIPFSPins(msgs, db, cfg)
+		err = qm.ProccessIPFSPins(msgs, db, cfg)
 		if err != nil {
 			return err
 		}
 	case IpfsFileQueue:
-		err = ProccessIPFSFiles(msgs, cfg, db)
-		if err != nil {
-			return err
-		}
-	case PinPaymentConfirmationQueue:
-		err = ProcessPinPaymentConfirmation(msgs, db, cfg.Ethereum.Connection.IPC.Path, cfg.Ethereum.Contracts.PaymentContractAddress, cfg)
-		if err != nil {
-			return err
-		}
-	case PinPaymentSubmissionQueue:
-		err = ProcessPinPaymentSubmissions(msgs, db, cfg.Ethereum.Connection.IPC.Path, cfg.Ethereum.Contracts.PaymentContractAddress)
+		err = qm.ProccessIPFSFiles(msgs, cfg, db)
 		if err != nil {
 			return err
 		}
 	case EmailSendQueue:
-		fmt.Println("processing mail sends")
-		err = ProcessMailSends(msgs, cfg)
+		err = qm.ProcessMailSends(msgs, cfg)
 		if err != nil {
 			return err
 		}
 	case IpnsEntryQueue:
-		fmt.Println("processing IPNS entry creation requests")
-		err = ProcessIPNSEntryCreationRequests(msgs, db, cfg)
-		if err != nil {
-			return err
-		}
-	case IpfsPinRemovalQueue:
-		fmt.Println("processing ipfs pin removals")
-		err = ProcessIPFSPinRemovals(msgs, cfg, db)
+		err = qm.ProcessIPNSEntryCreationRequests(msgs, db, cfg)
 		if err != nil {
 			return err
 		}
 	case IpfsKeyCreationQueue:
-		fmt.Println("processing ipfs key creation")
-		err = ProcessIPFSKeyCreation(msgs, db, cfg)
+		err = qm.ProcessIPFSKeyCreation(msgs, db, cfg)
 		if err != nil {
 			return err
 		}
 	case IpfsClusterPinQueue:
-		fmt.Println("processing ipfs cluster pins")
-		err = ProcessIPFSClusterPins(msgs, cfg, db)
+		err = qm.ProcessIPFSClusterPins(msgs, cfg, db)
 		if err != nil {
 			return err
 		}

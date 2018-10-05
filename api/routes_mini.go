@@ -10,33 +10,36 @@ import (
 
 // MakeBucket is used to create a bucket in our minio container
 func (api *API) makeBucket(c *gin.Context) {
-	ethAddress := GetAuthenticatedUserFromContext(c)
-	if ethAddress != AdminAddress {
-		FailNotAuthorized(c, "unauthorized access")
-		return
-	}
-	accessKey := api.TConfig.MINIO.AccessKey
-	secretKey := api.TConfig.MINIO.SecretKey
-	endpoint := fmt.Sprintf("%s:%s", api.TConfig.MINIO.Connection.IP, api.TConfig.MINIO.Connection.Port)
-	manager, err := mini.NewMinioManager(endpoint, accessKey, secretKey, true)
-	if err != nil {
-		FailOnError(c, err)
+	username := GetAuthenticatedUserFromContext(c)
+	if err := api.validateAdminRequest(username); err != nil {
+		FailNotAuthorized(c, UnAuthorizedAdminAccess)
 		return
 	}
 	bucketName, exists := c.GetPostForm("bucket_name")
 	if !exists {
-		FailNoExistPostForm(c, "bucket_name")
+		FailWithBadRequest(c, "bucket_name")
 		return
 	}
+
+	var (
+		accessKey = api.cfg.MINIO.AccessKey
+		secretKey = api.cfg.MINIO.SecretKey
+		endpoint  = fmt.Sprintf("%s:%s", api.cfg.MINIO.Connection.IP, api.cfg.MINIO.Connection.Port)
+	)
+	manager, err := mini.NewMinioManager(endpoint, accessKey, secretKey, true)
+	if err != nil {
+		api.LogError(err, MinioConnectionError)(c)
+		return
+	}
+
 	args := make(map[string]string)
 	args["name"] = bucketName
-	err = manager.MakeBucket(args)
-	if err != nil {
-		FailOnError(c, err)
+	if err = manager.MakeBucket(args); err != nil {
+		api.LogError(err, MinioBucketCreationError)(c)
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{
-		"status": "bucket created",
-	})
 
+	api.LogWithUser(username).Info("minio bucket created")
+
+	Respond(c, http.StatusOK, gin.H{"response": "bucket created"})
 }

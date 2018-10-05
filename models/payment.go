@@ -2,141 +2,68 @@ package models
 
 import (
 	"errors"
-	"math/big"
 
 	"github.com/jinzhu/gorm"
 )
 
-type PinPayment struct {
+// Payments is our payment model
+type Payments struct {
 	gorm.Model
-	Method           uint8  `json:"method"`
-	Number           string `json:"number"`
-	ChargeAmount     string `json:"charge_amount"`
-	EthAddress       string `json:"eth_address"`
-	UserName         string `json:"user_name"`
-	ContentHash      string `json:"content_hash"`
-	NetworkName      string `json:"network_name"`
-	HoldTimeInMonths int64  `json:"hold_time_in_months"`
+	DepositAddress string  `gorm:"type:varchar(255)"`
+	TxHash         string  `gorm:"type:varchar(255)"`
+	USDValue       float64 `gorm:"type:varchar(255)"` // USDValue is also a "Credit" value, since 1 USD -> 1 Credit
+	Blockchain     string  `gorm:"type:varchar(255)"`
+	Type           string  `gorm:"type:varchar(255)"` // ETH, RTC, XMR, BTC, LTC
+	UserName       string  `gorm:"type:varchar(255)"`
+	Confirmed      bool    `gorm:"type:varchar(255)"`
 }
 
-type PinPaymentManager struct {
+// PaymentManager is used to interact with payment information in our database
+type PaymentManager struct {
 	DB *gorm.DB
 }
 
-func NewPinPaymentManager(db *gorm.DB) *PinPaymentManager {
-	return &PinPaymentManager{DB: db}
+// NewPaymentManager is used to generate our payment manager helper
+func NewPaymentManager(db *gorm.DB) *PaymentManager {
+	return &PaymentManager{DB: db}
 }
 
-func (ppm *PinPaymentManager) FindPaymentByNumberAndAddress(number, ethAddress string) (*PinPayment, error) {
-	pp := &PinPayment{}
-	if check := ppm.DB.Where("eth_address = ? AND number = ?", ethAddress, number).First(pp); check.Error != nil {
+// NewPayment is used to create a payment in our database
+func (pm *PaymentManager) NewPayment(depositAddress string, txHash string, usdValue float64, blockchain string, paymentType string, username string) (*Payments, error) {
+	p := Payments{}
+	check := pm.DB.Where("tx_hash = ?", txHash).First(&p)
+	if check.Error == nil {
+		return nil, errors.New("payment with tx hash already exists")
+	} else if check.Error != nil && check.Error != gorm.ErrRecordNotFound {
 		return nil, check.Error
 	}
-	return pp, nil
-}
 
-func (ppm *PinPaymentManager) NewPayment(method uint8, number, chargeAmount *big.Int, uploaderAddress, contentHash, username string, holdTimeInMonths int64) (*PinPayment, error) {
-	_, err := ppm.FindPaymentByNumberAndAddress(number.String(), uploaderAddress)
-	if err == nil {
-		return nil, errors.New("payment already exists")
+	p = Payments{
+		DepositAddress: depositAddress,
+		TxHash:         txHash,
+		USDValue:       usdValue,
+		Blockchain:     blockchain,
+		Type:           paymentType,
+		UserName:       username,
+		Confirmed:      false,
 	}
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, err
-	}
-	pp := &PinPayment{
-		Number:           number.String(),
-		Method:           method,
-		ChargeAmount:     chargeAmount.String(),
-		EthAddress:       uploaderAddress,
-		UserName:         username,
-		ContentHash:      contentHash,
-		HoldTimeInMonths: holdTimeInMonths,
-	}
-	if check := ppm.DB.Create(pp); check.Error != nil {
+
+	if check := pm.DB.Create(&p); check.Error != nil {
 		return nil, check.Error
 	}
-	return pp, nil
+
+	return &p, nil
 }
 
-func (ppm *PinPaymentManager) RetrieveLatestPaymentByUser(username string) (*PinPayment, error) {
-	pp := PinPayment{}
-	if check := ppm.DB.Table("pin_payments").Order("number desc").Where("user_name = ?", username).First(&pp); check.Error != nil {
+// ConfirmPayment is used to mark a payment as confirmed
+func (pm *PaymentManager) ConfirmPayment(txHash string) (*Payments, error) {
+	p := Payments{}
+	if check := pm.DB.Where("tx_hash = ?", txHash).First(&p); check.Error != nil {
 		return nil, check.Error
 	}
-	return &pp, nil
-}
-
-func (ppm *PinPaymentManager) RetrieveLatestPaymentNumberByUser(username string) (*big.Int, error) {
-	pp := &PinPayment{}
-	num := big.NewInt(0)
-	check := ppm.DB.Table("pin_payments").Order("number desc").Where("user_name = ?", username).First(pp)
-	if check.Error != nil && check.Error != gorm.ErrRecordNotFound {
+	p.Confirmed = true
+	if check := pm.DB.Model(&p).Update("confirmed", p.Confirmed); check.Error != nil {
 		return nil, check.Error
 	}
-	if check.Error == gorm.ErrRecordNotFound {
-		return num, nil
-	}
-	var valid bool
-	num, valid = num.SetString(pp.Number, 10)
-	if !valid {
-		return nil, errors.New("failed to convert from string to big int")
-	}
-	return num, nil
-}
-
-type FilePayment struct {
-	gorm.Model
-	Method           uint8
-	Number           string
-	ChargeAmount     string
-	EthAddress       string
-	UserName         string
-	BucketName       string
-	ObjectName       string
-	NetworkName      string
-	HoldTimeInMonths int64
-}
-
-type FilePaymentManager struct {
-	DB *gorm.DB
-}
-
-func NewFilePaymentManager(db *gorm.DB) *FilePaymentManager {
-	return &FilePaymentManager{DB: db}
-}
-
-func (fpm *FilePaymentManager) NewPayment(method uint8, number, chargeAmount *big.Int, uploaderAddress, bucketName, objectName, networkName, username string, holdTimeInMonths int64) (*FilePayment, error) {
-	fp := &FilePayment{
-		Number:           number.String(),
-		Method:           method,
-		ChargeAmount:     chargeAmount.String(),
-		EthAddress:       uploaderAddress,
-		UserName:         username,
-		BucketName:       bucketName,
-		ObjectName:       objectName,
-		NetworkName:      networkName,
-		HoldTimeInMonths: holdTimeInMonths,
-	}
-	if check := fpm.DB.Create(fp); check.Error != nil {
-		return nil, check.Error
-	}
-	return fp, nil
-}
-
-func (fpm *FilePaymentManager) RetrieveLatestPaymentNumber(username string) (*big.Int, error) {
-	fp := &FilePayment{}
-	num := big.NewInt(0)
-	check := fpm.DB.Table("file_payments").Order("number desc").Where("user_name = ?", username).First(fp)
-	if check.Error != nil && check.Error != gorm.ErrRecordNotFound {
-		return nil, check.Error
-	}
-	if check.Error == gorm.ErrRecordNotFound {
-		return num, nil
-	}
-	var valid bool
-	num, valid = num.SetString(fp.Number, 10)
-	if !valid {
-		return nil, errors.New("failed to convert from string to big int")
-	}
-	return num, nil
+	return &p, nil
 }

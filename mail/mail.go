@@ -3,9 +3,9 @@ package mail
 import (
 	"errors"
 
-	"github.com/RTradeLtd/Temporal/config"
 	"github.com/RTradeLtd/Temporal/database"
 	"github.com/RTradeLtd/Temporal/models"
+	"github.com/RTradeLtd/config"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
@@ -32,7 +32,8 @@ func GenerateMailManager(tCfg *config.TemporalConfig) (*MailManager, error) {
 	dbPass := tCfg.Database.Password
 	dbURL := tCfg.Database.URL
 	dbUser := tCfg.Database.Username
-	db, err := database.OpenDBConnection(dbPass, dbURL, dbUser)
+	db, err := database.OpenDBConnection(database.DBOptions{
+		User: dbUser, Password: dbPass, Address: dbURL, Port: "5432"})
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +78,4 @@ func (mm *MailManager) SendEmail(subject, content, contentType, recipientName, r
 		return 0, err
 	}
 	return response.StatusCode, nil
-}
-
-type Message struct {
-	EthAddress string `json:"eth_address"`
 }
